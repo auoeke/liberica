@@ -1,0 +1,38 @@
+plugins {
+    id("java-library")
+    id("maven-publish")
+}
+
+group("user11681")
+version("0.0.0")
+
+targetCompatibility = sourceCompatibility = 16
+
+allprojects {
+    repositories {
+        maven {url = "https://auoeke.jfrog.io/artifactory/maven"}
+    }
+}
+
+dependencies {
+    api("user11681:reflect:1.3.1")
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+        }
+    }
+
+    repositories {
+        maven {
+            url = "https://auoeke.jfrog.io/artifactory/maven"
+
+            credentials {
+                username = System.env["ARTIFACTORY_USERNAME"]
+                password = System.env["ARTIFACTORY_PASSWORD"]
+            }
+        }
+    }
+}
