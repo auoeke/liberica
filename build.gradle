@@ -16,12 +16,10 @@ compileTestJava {
     options.compilerArgs = ["--release", "8"]
 }
 
-allprojects {
-    repositories {
-        mavenCentral()
+repositories {
+    mavenCentral()
 
-        maven {url = "https://auoeke.jfrog.io/artifactory/maven"}
-    }
+    maven {url = "https://auoeke.jfrog.io/artifactory/maven"}
 }
 
 dependencies {
