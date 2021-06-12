@@ -1,21 +1,51 @@
+buildscript {
+    repositories {
+        maven {url = "https://auoeke.jfrog.io/artifactory/maven"}
+    }
+
+    dependencies {
+        classpath("net.gudenau.lib:unsafe:latest.integration")
+    }
+}
+
 plugins {
     id("java-library")
     id("maven-publish")
 }
 
-group("user11681")
-version("0.0.0")
+group = "user11681"
+version = "0.0.0"
 
-targetCompatibility = sourceCompatibility = 16
+compileJava {
+    sourceCompatibility = 16
+    targetCompatibility = 16
+}
+
+compileTestJava {
+    targetCompatibility = 8
+}
 
 allprojects {
     repositories {
+        mavenCentral()
+
         maven {url = "https://auoeke.jfrog.io/artifactory/maven"}
     }
 }
 
 dependencies {
-    api("user11681:reflect:1.3.1")
+    api("user11681:reflect:latest.integration")
+
+    testAnnotationProcessor(sourceSets.main.output)
+    testAnnotationProcessor("user11681:reflect:latest.integration")
+    testImplementation("org.ow2.asm:asm:latest.integration")
+    testImplementation("org.ow2.asm:asm-tree:latest.integration")
+    testImplementation("org.junit.jupiter:junit-jupiter:latest.integration")
+}
+
+sourceSets {
+    test.runtimeClasspath += main.runtimeClasspath
+    test.compileClasspath += main.compileClasspath
 }
 
 publishing {
@@ -30,8 +60,8 @@ publishing {
             url = "https://auoeke.jfrog.io/artifactory/maven"
 
             credentials {
-                username = System.env["ARTIFACTORY_USERNAME"]
-                password = System.env["ARTIFACTORY_PASSWORD"]
+                username = System.properties["maven.username"]
+                password = System.properties["maven.password"]
             }
         }
     }

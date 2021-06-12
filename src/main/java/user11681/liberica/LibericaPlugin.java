@@ -4,6 +4,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -45,18 +46,18 @@ public class LibericaPlugin implements Plugin {
             Messager messager = ((ProcessingEnvironment) Invoker.bind(context, "get", Object.class, Class.class).invoke(Classes.load("com.sun.tools.javac.processing.JavacProcessingEnvironment"))).getMessager();
             MethodHandle isPreview = Invoker.bind(preview, "isPreview", boolean.class, Source$Feature);
 
-            for (Field field : Fields.getStaticFields(Source$Feature)) {
+            for (Field field : Fields.staticFields(Source$Feature)) {
                 if (Source$Feature.isAssignableFrom(field.getType())) {
                     Pointer pointer = new Pointer().staticField(field);
-                    Enum<?> feature = pointer.get();
+                    Enum<?> feature = pointer.getObject();
 
-                    if (JDK8.compareTo(minLevel.get(feature)) < 0) {
+                    if (JDK8.compareTo(minLevel.getObject(feature)) < 0) {
                         messager.printMessage(Diagnostic.Kind.NOTE, "Enabling feature %s.%n".formatted(feature));
 
-                        minLevel.put(feature, JDK8);
+                        minLevel.putObject(feature, JDK8);
 
                         if (!(boolean) isPreview.invoke(feature)) {
-                            pointer.put(LAMBDA);
+                            pointer.putObject(LAMBDA);
                         }
                     }
                 }
@@ -64,6 +65,8 @@ public class LibericaPlugin implements Plugin {
 
             initialized = true;
         } catch (Throwable throwable) {
+            System.out.println(Arrays.toString(System.getProperty("java.class.path").split(":")));
+
             throw Unsafe.throwException(throwable);
         }
     }
