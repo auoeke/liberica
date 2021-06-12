@@ -4,8 +4,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic;
@@ -16,6 +15,7 @@ import user11681.reflect.Fields;
 import user11681.reflect.Invoker;
 import user11681.reflect.Pointer;
 
+@SuppressWarnings("unchecked")
 public class LibericaPlugin implements Plugin {
     private boolean initialized;
 
@@ -29,7 +29,14 @@ public class LibericaPlugin implements Plugin {
         return true;
     }
 
-    @SuppressWarnings("unchecked")
+    private <T> T unlock(Object context, String keyHolder, String field) {
+        return (T) Accessor.<Map<Object, Object>>getObject(context, "ht").get(Accessor.getObject(Classes.load(keyHolder), field));
+    }
+
+    private <T> T get(Object context, String type) throws Throwable {
+        return (T) Invoker.bind(context, "get", Object.class, Class.class).invoke(Classes.load(type));
+    }
+
     @Override
     public void init(JavacTask task, String... args) {
         if (!initialized) try {
@@ -40,10 +47,9 @@ public class LibericaPlugin implements Plugin {
             Enum<?> LAMBDA = Accessor.getObject(Source$Feature, "LAMBDA");
 
             Object context = Accessor.getObject(task, "context");
-            HashMap<Object, Object> contextMap = Accessor.getObject(context, "ht");
-            Object preview = contextMap.get(Accessor.getObject(Classes.load("com.sun.tools.javac.code.Preview"), "previewKey"));
+            Object preview = unlock(context, "com.sun.tools.javac.code.Preview", "previewKey");
             Pointer minLevel = new Pointer().instanceField(Source$Feature, "minLevel");
-            Messager messager = ((ProcessingEnvironment) Invoker.bind(context, "get", Object.class, Class.class).invoke(Classes.load("com.sun.tools.javac.processing.JavacProcessingEnvironment"))).getMessager();
+            Messager messager = this.<ProcessingEnvironment>get(context, "com.sun.tools.javac.processing.JavacProcessingEnvironment").getMessager();
             MethodHandle isPreview = Invoker.bind(preview, "isPreview", boolean.class, Source$Feature);
 
             for (Field field : Fields.staticFields(Source$Feature)) {
@@ -53,7 +59,6 @@ public class LibericaPlugin implements Plugin {
 
                     if (JDK8.compareTo(minLevel.getObject(feature)) < 0) {
                         messager.printMessage(Diagnostic.Kind.NOTE, "Enabling feature %s.%n".formatted(feature));
-
                         minLevel.putObject(feature, JDK8);
 
                         if (!(boolean) isPreview.invoke(feature)) {
@@ -65,8 +70,6 @@ public class LibericaPlugin implements Plugin {
 
             initialized = true;
         } catch (Throwable throwable) {
-            System.out.println(Arrays.toString(System.getProperty("java.class.path").split(":")));
-
             throw Unsafe.throwException(throwable);
         }
     }

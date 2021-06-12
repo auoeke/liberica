@@ -13,6 +13,7 @@ compileJava {
 
 compileTestJava {
     targetCompatibility = 8
+    options.compilerArgs = ["--release", "8"]
 }
 
 allprojects {
@@ -27,10 +28,13 @@ dependencies {
     api("user11681:reflect:latest.integration")
 
     testAnnotationProcessor(sourceSets.main.output)
-    testAnnotationProcessor("user11681:reflect:latest.integration")
     testImplementation("org.ow2.asm:asm:latest.integration")
     testImplementation("org.ow2.asm:asm-tree:latest.integration")
     testImplementation("org.junit.jupiter:junit-jupiter:latest.integration")
+
+    configurations.api.dependencies.all {
+        testAnnotationProcessor(it)
+    }
 }
 
 sourceSets {
