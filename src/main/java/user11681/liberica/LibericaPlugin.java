@@ -25,19 +25,6 @@ public class LibericaPlugin implements Plugin {
     }
 
     @Override
-    public boolean autoStart() {
-        return true;
-    }
-
-    private <T> T unlock(Object context, String keyHolder, String field) {
-        return (T) Accessor.<Map<Object, Object>>getObject(context, "ht").get(Accessor.getObject(Classes.load(keyHolder), field));
-    }
-
-    private <T> T get(Object context, String type) throws Throwable {
-        return (T) Invoker.bind(context, "get", Object.class, Class.class).invoke(Classes.load(type));
-    }
-
-    @Override
     public void init(JavacTask task, String... args) {
         if (!initialized) try {
             Class<?> Source = Classes.load("com.sun.tools.javac.code.Source");
@@ -72,5 +59,18 @@ public class LibericaPlugin implements Plugin {
         } catch (Throwable throwable) {
             throw Unsafe.throwException(throwable);
         }
+    }
+
+    @Override
+    public boolean autoStart() {
+        return true;
+    }
+
+    private <T> T unlock(Object context, String keyHolder, String field) {
+        return (T) Accessor.<Map<Object, Object>>getObject(context, "ht").get(Accessor.getObject(Classes.load(keyHolder), field));
+    }
+
+    private <T> T get(Object context, String type) throws Throwable {
+        return (T) Invoker.bind(context, "get", Object.class, Class.class).invoke(Classes.load(type));
     }
 }
